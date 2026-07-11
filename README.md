@@ -14,7 +14,14 @@ Mullvad is the default provider, but gluetun supports [40+ providers](https://gi
 
 ## Setup
 
-1. Copy the env template and fill in your VPN credentials:
+1. Clone the repo:
+
+   ```bash
+   git clone https://github.com/dedene/vpngrok.git
+   cd vpngrok
+   ```
+
+2. Copy the env template and fill in your VPN credentials:
 
    ```bash
    cp .env.example .env
@@ -26,14 +33,14 @@ Mullvad is the default provider, but gluetun supports [40+ providers](https://gi
    on every config download, so the values in `.env` die the next time you
    regenerate a config.
 
-2. Start the stack and check that traffic exits through the VPN:
+3. Start the stack and check that traffic exits through the VPN:
 
    ```bash
    make up
    make verify
    ```
 
-3. Install the `vpngrok` wrapper on your PATH:
+4. Install the `vpngrok` wrapper on your PATH:
 
    ```bash
    make install-cli
