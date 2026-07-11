@@ -43,7 +43,7 @@ Mullvad is the default provider, but gluetun supports [40+ providers](https://gi
 4. Install the `vpngrok` wrapper on your PATH:
 
    ```bash
-   make install-cli
+   make install
    ```
 
 ## Usage
@@ -109,7 +109,7 @@ docker compose up -d vpn
 |---|---|
 | `make up` | Build and start the vpn + dev containers |
 | `make verify` | Confirm traffic exits through the VPN |
-| `make install-cli` | Symlink `vpngrok` into your PATH |
+| `make install` | Symlink `vpngrok` into your PATH |
 | `make shell` | Open a shell in the dev container |
 | `make logs` | Tail the vpn container logs |
 | `make down` | Stop everything |

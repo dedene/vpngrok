@@ -1,4 +1,4 @@
-.PHONY: up shell install-cli verify logs down
+.PHONY: up shell install verify logs down
 
 BIN_DIR ?= $(shell [ -d /opt/homebrew/bin ] && echo /opt/homebrew/bin || echo /usr/local/bin)
 
@@ -8,7 +8,7 @@ up:
 shell:
 	docker compose exec dev bash
 
-install-cli:
+install:
 	ln -sfn "$(CURDIR)/bin/vpngrok" "$(BIN_DIR)/vpngrok"
 	@echo "installed $(BIN_DIR)/vpngrok"
 
