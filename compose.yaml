@@ -31,6 +31,9 @@ services:
       - ${HOME}/.agents:/root/.agents:ro
       - ${HOME}/.grok/skills:/root/.grok/skills:ro
       - ${HOME}/.claude/skills:/root/.claude/skills:ro
+      # Share the session store with the host so /resume sees the same
+      # sessions in both. Works because host paths map 1:1 in the container.
+      - ${HOME}/.grok/sessions:/root/.grok/sessions
     working_dir: ${WORKSPACE_ROOT:-${HOME}/Development}
     environment:
       TERM: xterm-256color

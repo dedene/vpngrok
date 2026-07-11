@@ -63,6 +63,8 @@ First run asks you to log in. If the browser flow doesn't cooperate from inside 
 
 Your personal skills work too: the container mounts `~/.agents`, `~/.grok/skills`, and `~/.claude/skills` read-only, which covers every home-level directory Grok scans for skills. Project-level skills (`.grok/`, `.agents/`, `.claude/`, `.cursor/` inside a repo) come along with the workspace mount. If you don't have these directories, Docker creates them empty — harmless.
 
+Sessions are shared with the host: `~/.grok/sessions` is mounted read-write, and because host paths map 1:1 inside the container, `/resume` shows the same sessions whether you run Grok natively or through `vpngrok`. Just don't resume the *same* session from both at the same time.
+
 `vpngrok` works in any directory under `WORKSPACE_ROOT` — see below.
 
 ## Workspace root
