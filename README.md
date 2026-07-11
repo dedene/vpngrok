@@ -57,7 +57,21 @@ That's it. The wrapper starts the VPN and dev containers if they aren't running,
 
 First run asks you to log in. If the browser flow doesn't cooperate from inside the container, set `XAI_API_KEY` in `.env` instead. Login state persists in `.docker/dev-home`, so you only do this once.
 
-`vpngrok` works in any directory under `WORKSPACE_ROOT` (default: `~/Development`, configurable in `.env`). Only that tree is mounted — the rest of your home directory, including `~/.ssh` and `~/.aws`, stays out of the container's reach.
+`vpngrok` works in any directory under `WORKSPACE_ROOT` — see below.
+
+## Workspace root
+
+The container mounts one directory tree from your machine, and `vpngrok` only works inside it. It defaults to `~/Development`; set `WORKSPACE_ROOT` in `.env` if your projects live somewhere else:
+
+```bash
+WORKSPACE_ROOT=/Users/alice/Projects
+```
+
+Why not mount all of `$HOME`? Because whatever is mounted is readable and writable by the container, and by the Grok agent running inside it. Mounting your whole home directory hands over `~/.ssh`, `~/.aws`, browser profiles, documents, everything. Scoping the mount to your projects tree means a misbehaving agent (or a compromised dependency it runs) can only touch code you already intended to share with it.
+
+Performance is not the reason: Docker's VirtioFS mounts are lazy, so a broad mount costs nothing until files are actually accessed. It's purely about blast radius. If you truly want your whole home directory, set `WORKSPACE_ROOT` to its absolute path (e.g. `/Users/alice`) and own the tradeoff (Docker Desktop will show a warning, and macOS may prompt for access to personal folders).
+
+After changing `WORKSPACE_ROOT`, recreate the container: `docker compose up -d --force-recreate dev`.
 
 ## Other VPN providers
 
