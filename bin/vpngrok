@@ -1,0 +1,30 @@
+#!/usr/bin/env bash
+# Run Grok Build CLI inside the Mullvad-routed dev container, from any directory.
+set -euo pipefail
+
+SELF="$(readlink -f "$0")"
+REPO_DIR="$(cd "$(dirname "$SELF")/.." && pwd)"
+COMPOSE=(docker compose --project-directory "$REPO_DIR")
+
+MOUNT_ROOT="$(grep -s '^WORKSPACE_ROOT=' "$REPO_DIR/.env" | cut -d= -f2- | tr -d '"' || true)"
+MOUNT_ROOT="${MOUNT_ROOT:-$HOME/Development}"
+case "$PWD" in
+  "$MOUNT_ROOT"|"$MOUNT_ROOT"/*) ;;
+  *)
+    echo "vpngrok: $PWD is outside $MOUNT_ROOT and not mounted in the container" >&2
+    echo "vpngrok: set WORKSPACE_ROOT in $REPO_DIR/.env to change the mounted root" >&2
+    exit 1
+    ;;
+esac
+
+if ! "${COMPOSE[@]}" ps --status running dev --format '{{.Name}}' 2>/dev/null | grep -q .; then
+  echo "vpngrok: starting VPN + dev containers..." >&2
+  "${COMPOSE[@]}" up -d vpn dev
+fi
+
+if ! "${COMPOSE[@]}" exec dev bash -c 'command -v grok >/dev/null'; then
+  echo "vpngrok: Grok CLI not found in container, installing..." >&2
+  "${COMPOSE[@]}" exec dev bash -c 'curl -fsSL https://x.ai/cli/install.sh | bash'
+fi
+
+exec "${COMPOSE[@]}" exec -w "$PWD" dev grok "$@"

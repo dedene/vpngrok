@@ -1,0 +1,112 @@
+# vpnGrok
+
+Run xAI's Grok CLI from any project on your machine, with all its traffic routed through a VPN.
+
+Grok isn't available in every region. This repo puts the Grok CLI in a small Ubuntu container whose only network path is a [gluetun](https://github.com/qdm12/gluetun) VPN tunnel, then gives you a `vpngrok` command that works from any directory. If the tunnel drops, the container loses network entirely instead of leaking your real IP.
+
+Mullvad is the default provider, but gluetun supports [40+ providers](https://github.com/qdm12/gluetun-wiki/tree/main/setup/providers) (NordVPN, ProtonVPN, Surfshark, PIA, ...) — see [Other VPN providers](#other-vpn-providers).
+
+## Requirements
+
+- Docker Desktop (or any Docker with compose v2)
+- A VPN subscription with WireGuard or OpenVPN support
+- macOS or Linux
+
+## Setup
+
+1. Copy the env template and fill in your VPN credentials:
+
+   ```bash
+   cp .env.example .env
+   ```
+
+   For Mullvad: generate a WireGuard config at
+   <https://mullvad.net/en/account/wireguard-config> and copy the `PrivateKey`
+   and IPv4 `Address` values into `.env`. Careful: Mullvad rotates the keypair
+   on every config download, so the values in `.env` die the next time you
+   regenerate a config.
+
+2. Start the stack and check that traffic exits through the VPN:
+
+   ```bash
+   make up
+   make verify
+   ```
+
+3. Install the `vpngrok` wrapper on your PATH:
+
+   ```bash
+   make install-cli
+   ```
+
+## Usage
+
+```bash
+cd ~/Development/some-project
+vpngrok
+```
+
+That's it. The wrapper starts the VPN and dev containers if they aren't running, installs the Grok CLI on first use, and drops you into Grok with your current directory as the working directory. Host paths map 1:1 inside the container.
+
+First run asks you to log in. If the browser flow doesn't cooperate from inside the container, set `XAI_API_KEY` in `.env` instead. Login state persists in `.docker/dev-home`, so you only do this once.
+
+`vpngrok` works in any directory under `WORKSPACE_ROOT` (default: `~/Development`, configurable in `.env`). Only that tree is mounted — the rest of your home directory, including `~/.ssh` and `~/.aws`, stays out of the container's reach.
+
+## Other VPN providers
+
+The vpn container is plain gluetun, so switching providers is an `.env` change. Look up your provider in the [gluetun wiki](https://github.com/qdm12/gluetun-wiki/tree/main/setup/providers) and set the matching variables:
+
+```bash
+# NordVPN over OpenVPN, for example:
+VPN_SERVICE_PROVIDER=nordvpn
+VPN_TYPE=openvpn
+OPENVPN_USER=...
+OPENVPN_PASSWORD=...
+```
+
+The compose file passes through `VPN_SERVICE_PROVIDER`, `VPN_TYPE`, `WIREGUARD_PRIVATE_KEY`, `WIREGUARD_ADDRESSES`, `OPENVPN_USER`, `OPENVPN_PASSWORD`, `SERVER_COUNTRIES`, and `SERVER_CITIES`. If your provider needs a variable that isn't in that list, add it to the `vpn` service in `compose.yaml`.
+
+After changing providers: `make down && make up && make verify`.
+
+## How it works
+
+Two containers:
+
+- `vpn` runs gluetun with your provider's credentials. It owns the network.
+- `dev` is an Ubuntu box that shares the vpn container's network namespace
+  (`network_mode: "service:vpn"`). It has no network of its own, so everything
+  it does goes through the tunnel or nowhere.
+
+The `vpngrok` script is a thin wrapper around `docker compose exec` that maps your current directory into the container.
+
+All projects share one container, one Grok login, and one VPN exit server. There is no per-project isolation.
+
+## Kill-switch check
+
+With the stack running, stop the VPN container and confirm the dev container can't reach the internet:
+
+```bash
+docker compose stop vpn
+docker compose exec dev curl --max-time 10 https://am.i.mullvad.net/ip
+```
+
+The curl should time out rather than show your real IP. Bring the tunnel back with:
+
+```bash
+docker compose up -d vpn
+```
+
+## Make targets
+
+| Target | What it does |
+|---|---|
+| `make up` | Build and start the vpn + dev containers |
+| `make verify` | Confirm traffic exits through the VPN |
+| `make install-cli` | Symlink `vpngrok` into your PATH |
+| `make shell` | Open a shell in the dev container |
+| `make logs` | Tail the vpn container logs |
+| `make down` | Stop everything |
+
+## License
+
+MIT
