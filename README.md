@@ -33,6 +33,10 @@ Mullvad is the default provider, but gluetun supports [40+ providers](https://gi
    on every config download, so the values in `.env` die the next time you
    regenerate a config.
 
+   Also set `WORKSPACE_ROOT` to the directory where your projects live, unless
+   that's `~/Development` (the default). `vpngrok` only works inside this tree —
+   see [Workspace root](#workspace-root) for why.
+
 3. Start the stack and check that traffic exits through the VPN:
 
    ```bash
