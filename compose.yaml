@@ -26,6 +26,11 @@ services:
     volumes:
       - ${WORKSPACE_ROOT:-${HOME}/Development}:${WORKSPACE_ROOT:-${HOME}/Development}
       - ./.docker/dev-home:/root
+      # Personal skills, read-only. Grok scans these home-level dirs
+      # (plus .grok/.agents/.claude/.cursor dirs inside each project).
+      - ${HOME}/.agents:/root/.agents:ro
+      - ${HOME}/.grok/skills:/root/.grok/skills:ro
+      - ${HOME}/.claude/skills:/root/.claude/skills:ro
     working_dir: ${WORKSPACE_ROOT:-${HOME}/Development}
     environment:
       TERM: xterm-256color

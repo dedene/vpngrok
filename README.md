@@ -61,6 +61,8 @@ That's it. The wrapper starts the VPN and dev containers if they aren't running,
 
 First run asks you to log in. If the browser flow doesn't cooperate from inside the container, set `XAI_API_KEY` in `.env` instead. Login state persists in `.docker/dev-home`, so you only do this once.
 
+Your personal skills work too: the container mounts `~/.agents`, `~/.grok/skills`, and `~/.claude/skills` read-only, which covers every home-level directory Grok scans for skills. Project-level skills (`.grok/`, `.agents/`, `.claude/`, `.cursor/` inside a repo) come along with the workspace mount. If you don't have these directories, Docker creates them empty — harmless.
+
 `vpngrok` works in any directory under `WORKSPACE_ROOT` — see below.
 
 ## Workspace root
